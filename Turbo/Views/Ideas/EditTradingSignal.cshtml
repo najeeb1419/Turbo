@@ -38,7 +38,7 @@
 
             </div>
         </div>
-        @if (privileges.isStaffView == true && privileges.isStaffUpdate)
+        @if (privileges.isTradeIdeaView == true && privileges.isTradeIdeaUpdate)
         {
             <form action="EditTradingSignal" enctype="multipart/form-data" method="post">
                 <div class="card" style="margin-bottom:10px">
@@ -252,7 +252,7 @@
                                     </div>
                                 </div>
                             </div>
-                            @if (privileges.isStaffUpdate && Model.Disable==false)
+                            @if (privileges.isTradeIdeaUpdate && Model.Disable==false)
                             {
                                 <div class="col-md-12 mt-2 mb-3 ">
                                     <input type="submit" value="Save Change" class="btn buttoncolor" />

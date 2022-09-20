@@ -177,17 +177,17 @@
                         <li class="activeclass" id="Li_1">
                             @if (privileges != null)
                             {
-                                if (privileges.IsDashboard)
+                                if (privileges.isDashboard)
                                 {
                                 }
-                                if (privileges.IsDashboard)
+                                if (privileges.isDashboard)
                                 {
                                     <a href="~/Home/Index"><i class="fa fa-tachometer-alt iconcolor"></i> <span class="iconcolor">Dashboard</span></a>}
                             }
                         </li>
                         @if (privileges != null)
                         {
-                            if (privileges.isStaffView)
+                            if (privileges.isTradeIdea)
                             {
                                 <li class="nav-item activeclass" onclick="ActiveLink(2)" id="Li_2">
                                     <a class="nav-link iconcolor" href="~/Ideas/TradingSignalView" ata-toggle="collapse" aria-expanded="false" data-target="#submenu-4" aria-controls="submenu-4"><i class="fa fa-signal iconcolor"></i> <span class="iconcolor">Trade Ideas</span></a>
@@ -196,7 +196,7 @@
                         }
                         @if (privileges != null)
                         {
-                            if (privileges.isStaffView)
+                            if (privileges.isTradeIdeaCreate)
                             {
                                 <li class="nav-item activeclass" onclick="ActiveLink(3)" id="Li_3">
                                     <a class="nav-link iconcolor" href="~/Home/Dashbaord" ata-toggle="collapse" aria-expanded="false" data-target="#submenu-4" aria-controls="submenu-4"><i class="fa fa-signal iconcolor"></i> <span class="iconcolor">Add Trade Idea</span></a>
@@ -217,7 +217,7 @@
 
                         @if (privileges != null)
                         {
-                            if (privileges.isClientView)
+                            if (privileges.isCurrency)
                             {
                                 <li class="nav-item activeclass" onclick="ActiveLink(5)" id="Li_5">
                                     <a class="nav-link iconcolor" href="~/Currency/CurrencyView" ata-toggle="collapse" aria-expanded="false" data-target="#submenu-4" aria-controls="submenu-4"><i class="fa fa-dollar-sign iconcolor"></i> <span class="iconcolor">Currency</span></a>
@@ -275,7 +275,7 @@
                                                 }
                                                 @if (privileges != null)
                                                 {
-                                                    if (privileges.IsSetting)
+                                                    if (privileges.isSetting)
                                                     {
                                                         <a class="dropdown-item" href="/Designation/DesignationView">Settings</a>}
                                                 }

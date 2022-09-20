@@ -27,7 +27,6 @@ namespace Turbo.Models
    
         [Display(Name ="Joining Date")]
         public DateTime JoiningDate { get; set; }
-      
         public int Companyid { get; set; }
         [Display(Name = "Employee Address")]
         public string Address { get; set; }
@@ -45,8 +44,6 @@ namespace Turbo.Models
         public int? CreatedById { get; set; }
         public bool IsBlocked { get; set; }
         public bool IsHide { get; set; }
-
-
         public string UserName { get; set; }
 
        
