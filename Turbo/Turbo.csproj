@@ -54,6 +54,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="Hl7.Fhir.Support, Version=4.2.1.0, Culture=neutral, PublicKeyToken=d706911480550fc3, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hl7.Fhir.Support.4.2.1\lib\net452\Hl7.Fhir.Support.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.4.3\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
     </Reference>
@@ -191,6 +194,9 @@
       <HintPath>..\packages\Websocket.Client.4.4.43\lib\netstandard2.0\Websocket.Client.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
+    <Reference Include="YamlDotNet, Version=12.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.12.0.0\lib\net47\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
@@ -209,6 +215,7 @@
     <Compile Include="Controllers\EmployeeController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IdeasController.cs" />
+    <Compile Include="Controllers\MobileDashboadApiController.cs" />
     <Compile Include="Controllers\ServiceController.cs" />
     <Compile Include="Controllers\SocketController.cs" />
     <Compile Include="Controllers\TurboAPIController.cs" />
@@ -216,21 +223,13 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\202208230813190_initial1.cs" />
-    <Compile Include="Migrations\202208230813190_initial1.designer.cs">
-      <DependentUpon>202208230813190_initial1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202208240637252_initial2.cs" />
-    <Compile Include="Migrations\202208240637252_initial2.designer.cs">
-      <DependentUpon>202208240637252_initial2.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AllowNotification.cs" />
     <Compile Include="Models\CurrencyList.cs" />
     <Compile Include="Models\EmployeePIPS.cs" />
     <Compile Include="Models\Jobclass.cs" />
     <Compile Include="Models\JobScheduler.cs" />
     <Compile Include="Models\Notification.cs" />
+    <Compile Include="ViewModel\PIPSCalculation.cs" />
     <Compile Include="Models\StopLose.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="ViewModel\AllowNotificationViewModel.cs" />
@@ -262,6 +261,7 @@
     <Compile Include="ViewModel\PriviligesViewModel.cs" />
     <Compile Include="ViewModel\ReportList.cs" />
     <Compile Include="ViewModel\ResponseAPI.cs" />
+    <Compile Include="ViewModel\SelectItemDto.cs" />
     <Compile Include="ViewModel\StopLoseViewModel.cs" />
     <Compile Include="ViewModel\TakeProfitViewModel.cs" />
     <Compile Include="ViewModel\RegisterViewModel.cs" />
@@ -1002,14 +1002,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\202208230813190_initial1.resx">
-      <DependentUpon>202208230813190_initial1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202208240637252_initial2.resx">
-      <DependentUpon>202208240637252_initial2.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

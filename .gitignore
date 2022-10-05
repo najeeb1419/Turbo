@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+*.dll
+/packages/Hl7.Fhir.Support.4.2.1/lib
+/packages
+/Turbo/bin
+/Turbo/obj/Release
+/Turbo/obj/Debug

@@ -30,10 +30,9 @@ namespace Turbo.Controllers
                 {
                     ViewBag.admin = "";
                 }
-                var Employeelist = db.CompanyEmployees.Where(x => x.Enable == true).ToList();
+                var Employeelist = db.CompanyEmployees.Where(x => x.Enable == true && x.Companyid == employee1.Companyid).ToList();
                 var Designation = db.Designations.Where(x => x.Enable == true).ToList();
                 ViewBag.Designation = Designation;
-
                 return View(Employeelist);
             }
             else
@@ -88,7 +87,7 @@ namespace Turbo.Controllers
                 return RedirectToAction("Login", "Authentication");
             }
         }
-        
+
         public ActionResult EditEmployee(int id)
         {
             if (Session["Employee"] != null || Session["Company"] != null)
@@ -107,7 +106,7 @@ namespace Turbo.Controllers
         }
 
         [HttpPost]
-        public ActionResult EditEmployee(CompanyEmployee employee , string IsBlocked , string IsHide)
+        public ActionResult EditEmployee(CompanyEmployee employee, string IsBlocked, string IsHide)
         {
             if (Session["Employee"] != null || Session["Company"] != null)
             {
@@ -138,8 +137,8 @@ namespace Turbo.Controllers
                     findemployee.Address = employee.Address;
                     findemployee.DateOfBirth = employee.DateOfBirth;
                     findemployee.Password = employee.Password;
-                    findemployee.IsBlocked = IsBlocked == "on" ? true : false;
-                    findemployee.IsHide = IsHide == "on" ? true : false;
+                    findemployee.IsBlocked = IsBlocked != null ? true : false;
+                    findemployee.IsHide = IsHide != null ? true : false;
                     if (employee.Image != "" && employee.Image != null)
                     {
                         findemployee.Image = employee.Image;
@@ -151,7 +150,6 @@ namespace Turbo.Controllers
                     TempData["msg"] = "eidt";
                     TempData.Keep();
                     return RedirectToAction("EmployeeView");
-
                 }
                 else
                 {
@@ -162,7 +160,6 @@ namespace Turbo.Controllers
             {
                 return RedirectToAction("Login", "Authentication");
             }
-
         }
 
         public bool CheckExist(string contact, string mail)
@@ -195,7 +192,6 @@ namespace Turbo.Controllers
                 {
                     msg = "no";
                 }
-
                 return Json(msg, JsonRequestBehavior.AllowGet);
             }
             else
@@ -210,10 +206,8 @@ namespace Turbo.Controllers
                 {
                     msg = "no";
                 }
-
                 return Json(msg, JsonRequestBehavior.AllowGet);
-            }
-
+            }   
         }
         [HttpGet]
         public JsonResult CheckEmployeeMail(string mail, int id)
@@ -304,7 +298,6 @@ namespace Turbo.Controllers
                 return View(Employee);
                 //}
             }
-
             else
             {
                 return RedirectToAction("Login", "Authentication");

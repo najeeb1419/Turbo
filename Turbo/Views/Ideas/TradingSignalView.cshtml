@@ -14,7 +14,6 @@
 }
 
 @* new *@
-
 <div class="midde_cont" id="page">
     <div class="container-fluid">
         <div class="row column_title">
@@ -47,8 +46,9 @@
                 <label id="Alert_div" style="color:red"></label>
                 <label id="Alert_div1" style="color:green"></label>
             </div>
+
             <div class="white_shd full margin_bottom_30" style="margin-top:0px;">
-                @if (privileges.isStaffView)
+                @if (privileges.isTradeIdeaView)
                 {
                     <div class="row">
                         <div class="col-md-12">
@@ -57,21 +57,21 @@
                                     <div class="col-md-12" style="text-align:right; margin-left:-1%">
                                         <form>
                                             <div class="row pl-5 pr-5">
-
                                                 <div class="col-md-2">
                                                     <label>Status</label>
-                                                    <select class="form-control" name="Status" id="tradeStatus">
-                                                        <option value="">--Select--</option>
-                                                        <option value="">Active</option>
+                                                    <select class="form-control" name="Status" id="tradeStatus" onchange="BindDataTable()">
+                                                        <option value="">All</option>
+                                                        <option value="0">Pending</option>
+                                                        <option value="1">Approved</option>
+                                                        <option value="2">Rejected</option>
                                                         <option value="5">Won</option>
                                                         <option value="4">Loss</option>
                                                     </select>
                                                 </div>
-
                                                 <div class="col-md-2">
                                                     <label>Currency</label>
-                                                    <select class="form-control" name="CurrencyName" id="CurrencyName_id">
-                                                        <option value="">--Select--</option>
+                                                    <select class="form-control" name="CurrencyName" id="CurrencyName_id" onchange="BindDataTable()">
+                                                        <option value="">All</option>
                                                         @foreach (var item in ViewBag.currencieslist)
                                                         {
                                                             <option value="@item.CurrencyList.CurrencyName">@item.CurrencyList.CurrencyName</option>
@@ -80,21 +80,16 @@
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label>Employee</label>
-                                                    <select class="form-control" name="EmployeeId" id="Employee_Id">
+                                                    <select class="form-control" name="EmployeeId" id="Employee_Id" onchange="BindDataTable()">
                                                         @foreach (var item in ViewBag.employee)
                                                         {
                                                             <option value="@item.CompanyEmployeeID">@item.fName @item.lName</option>
                                                         }
                                                     </select>
                                                 </div>
-                                                <div class="col-md-2">
+                                                <div class="offset-4 col-md-2">
                                                     <label style="color:white"> .</label>
-                                                    <input style="display:block" type="button" onclick="BindDataTable()" value="Search" class="btn buttoncolor" />
-                                                </div>
-
-                                                <div class="offset-2 col-md-2">
-                                                    <label style="color:white"> .</label>
-                                                    @if (privileges.isStaffCreate)
+                                                    @if (privileges.isTradeIdeaCreate)
                                                     {
                                                         <a style="display:block" class="btn buttoncolor" href="/Home/Dashbaord">New Trade Idea</a>
                                                     }
@@ -102,14 +97,12 @@
                                             </div>
                                         </form>
                                     </div>
-
                                 </div>
                                 <div class="table_section padding_infor_info">
                                     <div class="table-responsive-sm">
                                         <table class="table table-hover " id="Trading_table" style="border:1px solid gray">
                                             <thead class="bg-light text-dark">
                                                 <tr>
-
                                                     <th>
                                                         Currency Pair
                                                     </th>
@@ -435,15 +428,14 @@
             RelaodDataBinding();
         }
 
-       
+
     }
 
-    function RelaodDataBinding()
-    {
+    function RelaodDataBinding() {
         setTimeout("BindDataTable()", 2000);
     }
 
-   
-    
+
+
 
 </script>

@@ -45,7 +45,7 @@
                 </div>
             </div>
         </div>
-        @if (privileges.IsDashboard == true)
+        @if (privileges.isDashboard == true)
         {
             <div class="row column1">
                 @if (privileges.isEmployeeView)
@@ -69,7 +69,7 @@
                     </div>
                 }
 
-                @if (privileges.isStaffView)
+                @if (privileges.isTradeIdea)
                 {
                     <div class="col-md-6 col-lg-3 ">
                         <a href="/Ideas/TradingSignalView">
@@ -90,7 +90,7 @@
                     </div>
                 }
 
-                @if (privileges.isClientView)
+                @if (privileges.isCurrency)
                 {
                     <div class="col-md-6 col-lg-3 ">
                         <a href="/Currency/CurrencyView">
@@ -257,10 +257,7 @@
 <script>
     var currentTime = new Date();
     var months = ["Jan", "Fab", "Ma", "Ap", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-
     var xValues = months;
-
     var yValues = [@Html.Raw(ViewBag.Incomlist[0]), @Html.Raw(ViewBag.Incomlist[1]), @Html.Raw(ViewBag.Incomlist[2]), @Html.Raw(ViewBag.Incomlist[3]), @Html.Raw(ViewBag.Incomlist[4]), @Html.Raw(ViewBag.Incomlist[5]), @Html.Raw(ViewBag.Incomlist[6]), @Html.Raw(ViewBag.Incomlist[7]), @Html.Raw(ViewBag.Incomlist[8]), @Html.Raw(ViewBag.Incomlist[9]), @Html.Raw(ViewBag.Incomlist[10]), @Html.Raw(ViewBag.Incomlist[11])];
     var barColors = ["red", "green", "blue", "orange", "brown", "#31676d", "#3e0a45", "#070226", "#436066", "#f52c86", "#0b7a14", "#bfbc02"];
 
@@ -299,7 +296,6 @@
     for (var i = 1; i <= array.length; i++) {
         daysArray[i] = i;
     }
-    //var days = ["jan", "Fab", "Ma", "Ap", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
      var myArray = [];
 
     @foreach (var d in Model.dailyCount)
@@ -324,7 +320,6 @@
             legend: { display: false },
             title: {
                 display: true
-                //text: "This Month" + " " + m
             }
         }
     });

@@ -34,7 +34,7 @@ namespace Turbo.Controllers
                 CompanyEmployee emp = new CompanyEmployee();
 
                 ViewBag.employee = db.CompanyEmployees.Where(x => x.Enable == true).ToList();
-                emp.fName = "--Select--";
+                emp.fName = "All";
                 emp.CompanyEmployeeID = 0;
                 ViewBag.employee.Insert(0, emp);
                 if (Session["Company"] != null)
@@ -53,11 +53,11 @@ namespace Turbo.Controllers
                     name = employee1.fName + " " + employee1.lName;
                     CreatedById = employee1.CompanyEmployeeID;
                     var priviliges = Session["Priviliges"] as Privileges;
-                    if (priviliges.isAdminAccess==false)
+                    if (priviliges.isManager == false)
                     {
                         ViewBag.employee = db.CompanyEmployees.Where(x => x.CompanyEmployeeID == CreatedById).ToList();
                     }
-                    
+
 
                 }
                 return View();
@@ -79,249 +79,46 @@ namespace Turbo.Controllers
             if (Session["Employee"] != null || Session["Company"] != null)
             {
                 int companyid = 0;
-                string name = "";
                 int? CreatedById = 0;
-                var query = db.TradingSignals.Include(x => x.CompanyEmployee).Include(x => x.CurrencyList).ToList();
-
                 if (Session["Company"] != null)
                 {
                     RegisterComapany company = new RegisterComapany();
                     company = Session["Company"] as RegisterComapany;
                     companyid = company.RegisterComapanyID;
-                    name = company.Name;
+                    IdeasList = db.TradingSignals.Include(x => x.CompanyEmployee).Include(x => x.CurrencyList).Where(x => x.Companyid == companyid.ToString()).OrderByDescending(x => x.TradingSignalId).ToList();
                     CreatedById = null;
-
-                    if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.CurrencyName != null && tablesParam.CurrencyName != "" && tablesParam.EmployeeId > 0)
-                    {
-                        if (tablesParam.Status != "1")
-                        {
-                            IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                    }
-                    else if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.CurrencyName != null && tablesParam.CurrencyName != "")
-                    {
-                        if (tablesParam.Status != "1")
-                        {
-                            IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                    }
-                    else if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.EmployeeId > 0)
-                    {
-                        if (tablesParam.Status != "1")
-                        {
-                            IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-
-                    }
-                    else if (tablesParam.Status != null && tablesParam.Status != "")
-                    {
-                        if (tablesParam.Status != "1")
-                        {
-                            IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.Status == tablesParam.Status).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-
-                    }
-                    else if (tablesParam.CurrencyName != null && tablesParam.CurrencyName != "" && tablesParam.EmployeeId > 0)
-                    {
-                        IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                    }
-                    else if (tablesParam.CurrencyName != null && tablesParam.CurrencyName != "")
-                    {
-
-                        IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-
-                    }
-                    else if (tablesParam.EmployeeId > 0)
-                    {
-                        IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                    }
-                    else
-                    {
-                        IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString()).OrderByDescending(x => x.TradingSignalId).ToList();
-                    }
+                    if (!string.IsNullOrEmpty(tablesParam.Status) && tablesParam.Status == "0" || tablesParam.Status == "1" || tablesParam.Status == "2")
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.Disable == false && x.Status == tablesParam.Status).ToList();
+                    else if (!string.IsNullOrEmpty(tablesParam.Status) && tablesParam.Status == "4" || tablesParam.Status == "5")
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.Disable == true && x.Status == tablesParam.Status).ToList();
+                    if (!string.IsNullOrEmpty(tablesParam.CurrencyName))
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).ToList();
+                    if (tablesParam.EmployeeId > 0)
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
                 }
                 else
                 {
                     CompanyEmployee employee1 = new CompanyEmployee();
                     employee1 = Session["Employee"] as CompanyEmployee;
-                    var priviliges = Session["Priviliges"] as Privileges;
-                    if(priviliges.isAdminAccess)
-                    {
-                        employee1.Designation.Name = "Admin";
-                    }
                     companyid = employee1.Companyid;
-                    name = employee1.fName + " " + employee1.lName;
+                    IdeasList = db.TradingSignals.Include(x => x.CompanyEmployee).Include(x => x.CurrencyList).Where(x => x.Companyid == companyid.ToString()).OrderByDescending(x => x.TradingSignalId).ToList();
                     CreatedById = employee1.CompanyEmployeeID;
-
-                    // if  admin
-                    if (employee1.Designation.Name == "Admin")
-                    {
-                        if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.CurrencyName != null && tablesParam.CurrencyName != "" && tablesParam.EmployeeId > 0)
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                        }
-                        else if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.CurrencyName != null && tablesParam.CurrencyName != "")
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                        }
-                        else if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.EmployeeId > 0)
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-
-                        }
-                        else if (tablesParam.Status != null && tablesParam.Status != "")
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.Status == tablesParam.Status).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-
-                        }
-                        else if (tablesParam.CurrencyName != null && tablesParam.CurrencyName != "" && tablesParam.EmployeeId > 0)
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else if (tablesParam.CurrencyName != null && tablesParam.CurrencyName != "")
-                        {
-
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-
-                        }
-                        else if (tablesParam.EmployeeId > 0)
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString()).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                    }
-                    // if not admin
-                    else
-                    {
-
-
-                        if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.CurrencyName != null && tablesParam.CurrencyName != "" && tablesParam.EmployeeId > 0)
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                        }
-                        else if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.CurrencyName != null && tablesParam.CurrencyName != "")
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                        }
-                        else if (tablesParam.Status != null && tablesParam.Status != "" && tablesParam.EmployeeId > 0)
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-
-                        }
-                        else if (tablesParam.Status != null && tablesParam.Status != "")
-                        {
-                            if (tablesParam.Status != "1")
-                            {
-                                IdeasList = query.Where(x => x.Companyid == companyid.ToString() && x.Status == tablesParam.Status).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                            else
-                            {
-                                IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.Status == tablesParam.Status).OrderByDescending(x => x.TradingSignalId).ToList();
-                            }
-                        }
-                        else if (tablesParam.CurrencyName != null && tablesParam.CurrencyName != "" && tablesParam.EmployeeId > 0)
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else if (tablesParam.CurrencyName != null && tablesParam.CurrencyName != "")
-                        {
-
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).OrderByDescending(x => x.TradingSignalId).ToList();
-
-                        }
-                        else if (employee1.Designation.Name == "Admin" && tablesParam.EmployeeId > 0)
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else if (employee1.Designation.Name == "Admin")
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.Companyid == companyid.ToString()).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                        else
-                        {
-                            IdeasList = query.Where(x => x.Disable == false && x.CreatedById == employee1.CompanyEmployeeID && x.Companyid == companyid.ToString()).OrderByDescending(x => x.TradingSignalId).ToList();
-                        }
-                    }
+                    if (!string.IsNullOrEmpty(tablesParam.Status) && tablesParam.Status == "0" || tablesParam.Status == "1" || tablesParam.Status == "2")
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.Disable == false && x.Status == tablesParam.Status).ToList();
+                    else if (!string.IsNullOrEmpty(tablesParam.Status) && tablesParam.Status == "4" || tablesParam.Status == "5")
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.Disable == true && x.Status == tablesParam.Status).ToList();
+                    if (!string.IsNullOrEmpty(tablesParam.CurrencyName))
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.CurrencyList.CurrencyName == tablesParam.CurrencyName).ToList();
+                    if (tablesParam.EmployeeId > 0)
+                        IdeasList = IdeasList.Where(x => x.Companyid == companyid.ToString() && x.CreatedById == tablesParam.EmployeeId).ToList();
                 }
-                //var config = new MapperConfiguration(cfg => cfg.CreateMap<List<TradingSignals>, List<TradingSignalsDto>>());
-                //var mapper = new Mapper(config);
-                //var data = mapper.Map<List<TradingSignals>, List<TradingSignalsDto>>(IdeasList);
                 int pageNo = 1;
                 if (tablesParam.iDisplayStart >= tablesParam.iDisplayLength)
                 {
                     pageNo = (tablesParam.iDisplayStart / tablesParam.iDisplayLength) + 1;
                 }
-                var QueryIdeasList = IdeasList.Skip((pageNo - 1) * tablesParam.iDisplayLength).Take(tablesParam.iDisplayLength).ToList();
-                //var  QueryIdeasList = IdeasList.Skip((pageNo - 1) *0).Take(3).ToList();
-                foreach (var item in QueryIdeasList)
+                var IdeasListIdeasList = IdeasList.Skip((pageNo - 1) * tablesParam.iDisplayLength).Take(tablesParam.iDisplayLength).ToList();
+                foreach (var item in IdeasListIdeasList)
                 {
                     TradingSignalsDto signalsDto = new TradingSignalsDto();
                     signalsDto.TradingSignalId = item.TradingSignalId;
@@ -334,13 +131,9 @@ namespace Turbo.Controllers
                     signalsDto.CreatedTime = item.CreatedTime.ToString("dd-MM-yyyy HH:mm");
                     tradingSignalsDto.Add(signalsDto);
                 }
-
                 var returnData = new PaginatedResult<TradingSignalsDto>
                 {
-
                     aaData = tradingSignalsDto,
-
-
                     iTotalRecords = IdeasList.Count(),
                     iTotalDisplayRecords = IdeasList.Count(),
                     sEcho = tablesParam.sEcho,
@@ -420,7 +213,7 @@ namespace Turbo.Controllers
                 }
                 else
                 {
-                    var find = db.TradingSignals.Include(x=>x.CompanyEmployee).Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.TradingSignalId == trading.TradingSignalId).FirstOrDefault();
+                    var find = db.TradingSignals.Include(x => x.CompanyEmployee).Where(x => x.Disable == false && x.Companyid == companyid.ToString() && x.TradingSignalId == trading.TradingSignalId).FirstOrDefault();
                     if (find != null)
                     {
                         find.Buy = trading.Buy;
@@ -583,9 +376,9 @@ namespace Turbo.Controllers
                     //Update on Trade Idea - EUR/JPY
                     string body = "Update on Trade Idea - " + find.CurrencyList.CurrencyName + "by " + name;
                     int createdId = Convert.ToInt32(find.CreatedById);
-                    if (find.Status == "1" && find.CompanyEmployee.IsHide==false)
+                    if (find.Status == "1" && find.CompanyEmployee.IsHide == false)
                     {
-                        
+
                         SendNotification(createdId, body, trading.TradingSignalId);
                     }
                     TempData["msg"] = "success";
@@ -854,7 +647,7 @@ namespace Turbo.Controllers
                 {
                     return Json("Empty", JsonRequestBehavior.AllowGet);
                 }
-                var findTradingSignal = db.TradingSignals.Include(x=>x.CompanyEmployee).Where(x => x.TradingSignalId == TradingSignalId && x.Disable == false && x.Companyid == companyid.ToString()).FirstOrDefault();
+                var findTradingSignal = db.TradingSignals.Include(x => x.CompanyEmployee).Where(x => x.TradingSignalId == TradingSignalId && x.Disable == false && x.Companyid == companyid.ToString()).FirstOrDefault();
                 if (findTradingSignal == null)
                 {
                     return Json("Empty", JsonRequestBehavior.AllowGet);
@@ -921,7 +714,7 @@ namespace Turbo.Controllers
                     db.Notifications.Add(notification);
                     db.SaveChanges();
                     int employeeid = Convert.ToInt32(findTradingSignal.CreatedById);
-                    if(findTradingSignal.CompanyEmployee.IsHide==false)
+                    if (findTradingSignal.CompanyEmployee.IsHide == false)
                     {
                         SendNotification(employeeid, notification.Body, findTradingSignal.TradingSignalId);
                     }

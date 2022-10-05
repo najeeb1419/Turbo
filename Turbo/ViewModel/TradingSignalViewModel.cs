@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using Turbo.ViewModel.EmployeeAPIviewModel;
 
 namespace Turbo.ViewModel
 {
@@ -30,6 +31,7 @@ namespace Turbo.ViewModel
         //public DateTime ModifyTime { get; set; }
         public List<TakeProfitViewModel> TakeProfitList { get; set; }
         public StopLoseViewModel StopLose { get; set; }
+        public ResponseAPI response { get; set; }
         public TradingSignalViewModel()
         {
             CurrencyListId = 0;
@@ -50,6 +52,8 @@ namespace Turbo.ViewModel
             CreatedTime = "";
             LatestHitTp = "";
             Status = "";
+            TakeProfitList = new List<TakeProfitViewModel>();
+            StopLose = new StopLoseViewModel();
         }
     }
 }

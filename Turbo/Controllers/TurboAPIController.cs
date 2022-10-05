@@ -15,6 +15,7 @@ using System.Net.Mail;
 using Turbo.Migrations;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Turbo.Controllers
 {
@@ -166,7 +167,7 @@ namespace Turbo.Controllers
                                 SLobject.PIPS = StopLoseobj.PIPS;
                                 SLobject.SL = StopLoseobj.SL;
                                 SLobject.Disble = StopLoseobj.Disable;
-                                if (StopLoseobj.Disable == true)
+                                if (string.IsNullOrEmpty(tradingSignalViewModel.LatestHitTp) && StopLoseobj.Disable == true)
                                 {
                                     tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
                                 }
@@ -180,21 +181,18 @@ namespace Turbo.Controllers
                         }
                         trading.TradingSignalList = TradingList;
                         res.Message = "Ok";
-                        res.StatusCode = "200";
                         trading.Response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, trading);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "1000";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
@@ -202,7 +200,6 @@ namespace Turbo.Controllers
             {
                 trading.TradingSignalList = null;
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
                 trading.Response = res;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, trading);
             }
@@ -326,11 +323,11 @@ namespace Turbo.Controllers
                                 SLobject.TradingSignalId = StopLoseobj.TradingSignalId;
                                 SLobject.PIPS = StopLoseobj.PIPS;
                                 SLobject.SL = StopLoseobj.SL;
-                                if (StopLoseobj.Disable == true)
+                                if (string.IsNullOrEmpty(tradingSignalViewModel.LatestHitTp) && StopLoseobj.Disable == true)
                                 {
-                                    tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
-                                    double pips = Convert.ToDouble(StopLoseobj.PIPS);
-                                    tradingSignalViewModel.PIPS = Convert.ToInt64(pips);
+                                        tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
+                                        double pips = Convert.ToDouble(StopLoseobj.PIPS);
+                                        tradingSignalViewModel.PIPS = Convert.ToInt64(pips);
                                 }
                                 tradingSignalViewModel.StopLose = SLobject;
                             }
@@ -342,21 +339,18 @@ namespace Turbo.Controllers
                         }
                         trading.TradingSignalList = TradingList;
                         res.Message = "Ok";
-                        res.StatusCode = "200";
                         trading.Response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, trading);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "1000";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
@@ -364,7 +358,6 @@ namespace Turbo.Controllers
             {
                 trading.TradingSignalList = null;
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
                 trading.Response = res;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, trading);
             }
@@ -383,28 +376,22 @@ namespace Turbo.Controllers
                     {
                         if (user.deviceToken == "" || user.deviceToken == null)
                         {
-                            res.StatusCode = "1000";
                             res.Message = "deviceToken can't be null";
-                            return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                         }
                         else if (user.apiToken == "" || user.apiToken == null)
                         {
-                            res.StatusCode = "1000";
                             res.Message = "apiToken can't be null";
-                            return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                         }
                         else if (user.companyid == 0)
                         {
-                            res.StatusCode = "1000";
                             res.Message = "companyid can't be null";
-                            return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                         }
                         else if (user.userId == 0)
                         {
-                            res.StatusCode = "1000";
                             res.Message = "userId can't be null";
-                            return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                         }
+                        return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
+
                     }
                     User user1 = new User();
                     user1.ApiToken = user.apiToken;
@@ -419,7 +406,6 @@ namespace Turbo.Controllers
                     var findcompany = db.RegisterComapany.Where(x => x.RegisterComapanyID == user.companyid && x.Enable == true).FirstOrDefault();
                     if (findcompany == null)
                     {
-                        res.StatusCode = "1000";
                         res.Message = "your company not registerd";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
@@ -433,23 +419,19 @@ namespace Turbo.Controllers
                             finduser.ModifyTime = DateTime.Now.AddHours(5);
                             db.Entry(finduser).State = EntityState.Modified;
                             db.SaveChanges();
-                            res.StatusCode = "200";
                             res.Message = "User data updated successfully";
-                            return Request.CreateResponse(HttpStatusCode.OK, res);
                         }
                         else
                         {
                             db.Users.Add(user1);
                             db.SaveChanges();
-                            res.StatusCode = "200";
                             res.Message = "User data added successfully";
-                            return Request.CreateResponse(HttpStatusCode.OK, res);
                         }
+                        return Request.CreateResponse(HttpStatusCode.OK, res);
                     }
                 }
                 else
                 {
-                    res.StatusCode = "1000";
                     res.Message = "object is null";
                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                 }
@@ -457,7 +439,6 @@ namespace Turbo.Controllers
             }
             catch (Exception ex)
             {
-                res.StatusCode = "1000";
                 res.Message = ex.Message;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
@@ -488,11 +469,6 @@ namespace Turbo.Controllers
                         var emplist = db.CompanyEmployees.Where(x => x.Companyid == apiDTO.companyId && x.Enable == true && x.IsHide == false).ToList();
                         foreach (var item1 in emplist)
                         {
-                            int WonSum = 0;
-                            int lossSumm = 0;
-                            int tradeWonSum = 0;
-                            int tradeLoseSum = 0;
-
                             tradingReportVM = new TradingReportViewModel();
                             var query = db.EmployeePIPs.Include(x => x.CompanyEmployee).Where(x => x.CompanyId == apiDTO.companyId.ToString() && x.CompanyEmployeeID == item1.CompanyEmployeeID).ToList();
                             if (apiDTO.reportType.ToLower() == "monthly")
@@ -506,20 +482,7 @@ namespace Turbo.Controllers
                                 var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
                                 var lastDayOfMonth = new DateTime(date.Year, date.Month, daysInMonth);
                                 query = query.Where(x => x.CreatedTime.Date >= firstDayOfMonth.Date && x.CreatedTime.Date <= lastDayOfMonth.Date).ToList();
-                                tradingReportVM.PIPSGain = query.Where(x => x.PIPS >= 0 && x.Disable == false).Count();
-                                tradingReportVM.PIPSLose = query.Where(x => x.PIPS < 0 && x.Disable == false).Count();
-                                //WonSum = query.Where(x => x.PIPS > 0 && x.Disable == true).Sum(x => x.PIPS);
-                                lossSumm = query.Where(x => x.PIPS < 0 && x.Disable == false).Sum(x => x.PIPS);
-                                var uniqTradeId = query.GroupBy(x => x.TradingSignalId).Select(y => y.First()).Distinct().ToList().Where(o => o.PIPS >= 0 && o.Disable == true).ToList();
-                                if (query.Count > 0)
-                                {
-                                    foreach (var item in uniqTradeId)
-                                    {
-                                        var getHeighestWonPIPS = query.Where(o => o.TradingSignalId == item.TradingSignalId && o.PIPS >= 0 && o.Disable == true)
-                                   .Max(o => o.PIPS);
-                                        WonSum = WonSum + getHeighestWonPIPS;
-                                    }
-                                }
+
                             }
                             else if (apiDTO.reportType.ToLower() == "weekly")
                             {
@@ -534,53 +497,26 @@ namespace Turbo.Controllers
                                 DateTime currentWeekStartDate = date.AddDays(-daysTillCurrentDay);
                                 DateTime CurrentWeekLastDate = currentWeekStartDate.AddDays(6);
                                 query = query.Where(x => x.CreatedTime.Date >= currentWeekStartDate.Date && x.CreatedTime.Date <= CurrentWeekLastDate.Date).ToList();
-
-                                tradingReportVM.PIPSGain = query.Where(x => x.PIPS >= 0 && x.Disable == false).Count();
-                                tradingReportVM.PIPSLose = query.Where(x => x.PIPS < 0 && x.Disable == false).Count();
-                                //WonSum = query.Where(x => x.PIPS > 0 && x.Disable == true).Sum(x => x.PIPS);
-                                lossSumm = query.Where(x => x.PIPS < 0 && x.Disable == false).Sum(x => x.PIPS);
-                                var uniqTradeId = query.GroupBy(x => x.TradingSignalId).Select(y => y.First()).Distinct().ToList().Where(o => o.PIPS >= 0 && o.Disable == true).ToList();
-                                if (query.Count > 0)
-                                {
-                                    foreach (var item in uniqTradeId)
-                                    {
-                                        var getHeighestWonPIPS = query.Where(o => o.TradingSignalId == item.TradingSignalId && o.PIPS >= 0 && o.Disable == true)
-                                   .Max(o => o.PIPS);
-                                        WonSum = WonSum + getHeighestWonPIPS;
-                                    }
-                                }
                             }
-                            else
-                            {
-                                tradingReportVM.PIPSGain = query.Where(x => x.PIPS >= 0 && x.Disable == false).Count();
-                                tradingReportVM.PIPSLose = query.Where(x => x.PIPS < 0 && x.Disable == false).Count();
-                                //WonSum = query.Where(x => x.PIPS > 0 && x.Disable == true).Sum(x => x.PIPS);
-                                lossSumm = query.Where(x => x.PIPS < 0 && x.Disable == false).Sum(x => x.PIPS);
-                                var uniqTradeId = query.GroupBy(x => x.TradingSignalId).Select(y => y.First()).Distinct().ToList().Where(o => o.PIPS >= 0 && o.Disable == true).ToList();
-                                if (query.Count > 0)
-                                {
-                                    foreach (var item in uniqTradeId)
-                                    {
-                                        var getHeighestWonPIPS = query.Where(o => o.TradingSignalId == item.TradingSignalId && o.PIPS >= 0 && o.Disable == true)
-                                   .Max(o => o.PIPS);
-                                        WonSum = WonSum + getHeighestWonPIPS;
-                                    }
-                                }
-                            }
+                            //
+                            var calculate = CalculatePIPS(query);
+                            tradingReportVM.PIPSGain = calculate.PIPSWonCount;
+                            tradingReportVM.PIPSLose = calculate.PIPSLossCount;
+                            //
                             tradingReportVM.CreatedById = item1.CompanyEmployeeID;
                             tradingReportVM.EmployeeId = item1.CompanyEmployeeID;
                             tradingReportVM.Image = "/Images/Employee/" + item1.Image;
                             tradingReportVM.EmployeeName = item1.fName + " " + item1.lName;
-                            tradingReportVM.wonSum = WonSum;
-                            tradingReportVM.lossSum = Math.Abs(lossSumm);
-                            lossSumm = Math.Abs(lossSumm);
+                            tradingReportVM.wonSum = calculate.PIPSWonSum;
+                            tradingReportVM.lossSum = Math.Abs(calculate.PIPSLossSum);
+                            calculate.PIPSLossSum = Math.Abs(calculate.PIPSLossSum);
                             float wonPercentage = 0;
                             float lossPercentage = 0;
-                            if (WonSum > 0 || lossSumm > 0)
+                            if (calculate.PIPSWonSum > 0 || calculate.PIPSLossSum > 0)
                             {
-                                float total = WonSum + lossSumm;
-                                wonPercentage = (WonSum / total) * 100;
-                                lossPercentage = (lossSumm / total) * 100;
+                                float total = calculate.PIPSWonSum + calculate.PIPSLossSum;
+                                wonPercentage = (calculate.PIPSWonSum / total) * 100;
+                                lossPercentage = (calculate.PIPSLossSum / total) * 100;
                                 tradingReportVM.wonPercentage = wonPercentage;
                                 tradingReportVM.lossPercentage = lossPercentage;
                             }
@@ -594,25 +530,24 @@ namespace Turbo.Controllers
                             }
                         }
                         // to manage top pips stars apply order by wonrank and lossrank
-                        if(TradList.Count>0)
+                        if (TradList.Count > 0)
                         {
-                            WonRank = TradList.Where(x=>x.wonSum>0).OrderByDescending(x => x.wonSum).ToList();
-                            LossRank = TradList.Where(x => x.lossSum > 0 && x.wonSum==0).OrderBy(x => (Math.Abs(x.lossSum))).ToList();
-                            if(WonRank.Count>0)
+                            WonRank = TradList.Where(x => x.wonSum > 0).OrderByDescending(x => x.wonSum).ToList();
+                            LossRank = TradList.Where(x => x.lossSum > 0 && x.wonSum == 0).OrderBy(x => (Math.Abs(x.lossSum))).ToList();
+                            if (WonRank.Count > 0)
                             {
                                 TradList = WonRank;
-                                if(LossRank.Count>0)
+                                if (LossRank.Count > 0)
                                 {
                                     TradList.AddRange(LossRank);
                                 }
                             }
-                            else if(LossRank.Count>0)
+                            else if (LossRank.Count > 0)
                             {
                                 TradList = LossRank;
                             }
                         }
                         res.Message = "Ok";
-                        res.StatusCode = "200";
                         tradingReportObjectViewModel.response = res;
                         tradingReportObjectViewModel.tradingReportList = TradList;
                         reportList.tradingReport = tradingReportObjectViewModel;
@@ -621,21 +556,18 @@ namespace Turbo.Controllers
                     else
                     {
                         res.Message = "Your are not authorized.";
-                        res.StatusCode = "1000";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registerd.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
 
@@ -730,34 +662,31 @@ namespace Turbo.Controllers
                         }
                         notificationAPi.notificationList = notificationVMlist;
                         res.Message = "Ok";
-                        res.StatusCode = "200";
                         notificationAPi.response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, notificationAPi);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "200";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
+                return Request.CreateResponse(HttpStatusCode.ExpectationFailed, res);
             }
-            return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
+
         }
 
         [HttpPost]
-        public HttpResponseMessage Educators([FromBody] UserDTO user)
+        public async Task<HttpResponseMessage> Educators([FromBody] UserDTO user)
         {
             ResponseAPI res = new ResponseAPI();
             //creating these objects on the demand of andriod developer 
@@ -774,7 +703,7 @@ namespace Turbo.Controllers
                     if (CheckApiToken(user.companyid, user.apiToken))
                     {
 
-                        var employees = db.CompanyEmployees.Where(x => x.Companyid == user.companyid && x.IsHide == false).ToList();
+                        var employees = await db.CompanyEmployees.Where(x => x.Companyid == user.companyid && x.IsHide == false).ToListAsync();
                         //var user = db.Users.Where(x=>x.Disable==false && x.DeviceUserId==)
                         var disallowNotifiation = db.AllowNotifications.Where(x => x.RegisterComapanyID == user.companyid && x.DeviceUserId == user.userId).ToList();
                         if (employees.Count > 0)
@@ -789,18 +718,20 @@ namespace Turbo.Controllers
                                         edu.status = false;
                                     }
                                 }
-                                decimal wonSum = 0;
-                                decimal lossSum = 0;     
                                 edu.employeeName = employees[i].fName + " " + employees[i].lName;
                                 edu.employeeId = employees[i].CompanyEmployeeID;
                                 edu.employeeImage = "/Images/Employee/" + employees[i].Image;
                                 List<EmployeePIPS> pipsList = new List<EmployeePIPS>();
-                                pipsList = db.EmployeePIPs.Include(x=>x.CompanyEmployee).Where(x => x.CompanyId == user.companyid.ToString() && x.CompanyEmployeeID == edu.employeeId && x.CompanyEmployee.IsHide==false).ToList();
-                                edu.pipsWin = pipsList.Where(x => x.PIPS >= 0 && x.Disable == false).Count();
-                                edu.pipsLoss = pipsList.Where(x => x.PIPS < 0 && x.Disable == false).Count();
-                                //edu.wonSum = pipsList.Where(x => x.PIPS >= 0 && x.Disable == true).Sum(x => x.PIPS);
-                                edu.wonSum = pipsList.Where(x => x.PIPS >= 0 && x.Disable == true).Sum(x => x.PIPS);
-                                edu.lossSum = pipsList.Where(x => x.PIPS < 0 && x.Disable == false).Sum(x => x.PIPS);
+                                pipsList = await db.EmployeePIPs.Include(x => x.CompanyEmployee).Where(x => x.CompanyId == user.companyid.ToString() && x.CompanyEmployeeID == edu.employeeId && x.CompanyEmployee.IsHide == false).ToListAsync();
+                                var calculate = CalculatePIPS(pipsList);
+                                //edu.pipsWin = pipsList.Where(x => x.Status.ToLower() == "won").Count();
+                                //edu.pipsLoss = pipsList.Where(x => x.Status.ToLower() == "loss").Count();
+                                //edu.wonSum = pipsList.Where(x => x.Status.ToLower() == "won").Sum(x => x.PIPS);
+                                //edu.lossSum = pipsList.Where(x => x.Status.ToLower() == "loss").Sum(x => x.PIPS);
+                                edu.pipsWin = calculate.PIPSWonCount;
+                                edu.pipsLoss = calculate.PIPSLossCount;
+                                edu.wonSum = calculate.PIPSWonSum;
+                                edu.lossSum = calculate.PIPSLossSum;
                                 edu.wonPercentage = (edu.wonSum / edu.wonSum + edu.lossSum) * 100;
                                 edu.lossPercentage = (100 - edu.wonPercentage);
                                 edulist.Add(edu);
@@ -812,21 +743,18 @@ namespace Turbo.Controllers
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "200";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
             }
             return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
         }
@@ -847,25 +775,21 @@ namespace Turbo.Controllers
                             {
                                 if (notif.companyId == 0)
                                 {
-                                    res.StatusCode = "1000";
                                     res.Message = "CompanyId can't be null";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                                 else if (notif.employeeId == 0)
                                 {
-                                    res.StatusCode = "1000";
                                     res.Message = "employeeId can't be null";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                                 else if (notif.apiToken == "" || notif.apiToken == null)
                                 {
-                                    res.StatusCode = "1000";
                                     res.Message = "apiToken can't be null";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                                 else if (notif.userId == 0)
                                 {
-                                    res.StatusCode = "1000";
                                     res.Message = "userId can't be null";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
@@ -878,11 +802,9 @@ namespace Turbo.Controllers
                                 {
                                     db.AllowNotifications.Remove(finduser);
                                     db.SaveChanges();
-                                    res.StatusCode = "200";
                                     res.Message = "Notificatons allow successfully";
                                     return Request.CreateResponse(HttpStatusCode.OK, res);
                                 }
-                                res.StatusCode = "200";
                                 res.Message = "";
                                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                             }
@@ -897,25 +819,21 @@ namespace Turbo.Controllers
                                     notif.status = false;
                                     db.AllowNotifications.Add(notification);
                                     db.SaveChanges();
-                                    res.StatusCode = "200";
                                     res.Message = "Notifications off successfully";
                                     return Request.CreateResponse(HttpStatusCode.OK, res);
                                 }
-                                res.StatusCode = "200";
                                 res.Message = "Notifications already off";
                                 return Request.CreateResponse(HttpStatusCode.OK, res);
                             }
                         }
                         else
                         {
-                            res.StatusCode = "1000";
                             res.Message = "Your company not registerd";
                             return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                         }
                     }
                     else
                     {
-                        res.StatusCode = "1000";
                         res.Message = "object is null";
                         return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                     }
@@ -923,13 +841,11 @@ namespace Turbo.Controllers
                 else
                 {
                     res.Message = "You are not authorized user.";
-                    res.StatusCode = "200";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
-                res.StatusCode = "1000";
                 res.Message = ex.Message;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
@@ -998,23 +914,36 @@ namespace Turbo.Controllers
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "200";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
+                return Request.CreateResponse(HttpStatusCode.ExpectationFailed, res);
             }
             return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
         }
+
+        public PIPSCalculation CalculatePIPS(List<EmployeePIPS> input)
+        {
+            PIPSCalculation pipsCalculation = new PIPSCalculation();
+            pipsCalculation.PIPSWonCount = input.Where(x => x.Status.ToLower() == "won").Count();
+            pipsCalculation.PIPSLossCount = input.Where(x => x.Status.ToLower() == "loss").Count();
+            pipsCalculation.PIPSWonSum = input.Where(x => x.Status.ToLower() == "won").Sum(x => x.PIPS);
+            pipsCalculation.PIPSLossSum = input.Where(x => x.Status.ToLower() == "loss").Sum(x => x.PIPS);
+            return pipsCalculation;
+        }
     }
 }
+
+
+
+
+

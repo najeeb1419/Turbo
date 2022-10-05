@@ -89,7 +89,7 @@ namespace Turbo.Controllers
                     companyid = employee1.Companyid;
                     name = employee1.fName + " " + employee1.lName;
                     CreatedById = employee1.CompanyEmployeeID;
-                    if (employee1.Designation.Name == "Admin" || privileges.isAdminAccess==true)
+                    if (employee1.Designation.Name == "Admin" || privileges.isManager == true)
                     {
                         var tradingSignals = db.TradingSignals.Include("CompanyEmployee").Where(x => x.Companyid == companyid.ToString()).Take(30).ToList();
                         CountTradingIdeas = tradingSignals.Count();
@@ -202,6 +202,7 @@ namespace Turbo.Controllers
                 return RedirectToAction("Login", "Authentication");
             }
         }
+
         [HttpPost]
         public ActionResult Dashbaord(TradingSignals tradingSignals, List<string> TP, List<string> ProfitPIPS, string SL, string StopPIPS)
         {
@@ -388,6 +389,7 @@ namespace Turbo.Controllers
             }
             return result;
         }
+
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
@@ -589,28 +591,21 @@ namespace Turbo.Controllers
             try
             {
                 var user = db.Users.ToList();
-
                 List<string> singlebatch = new List<string>();
                 for (int i = 0; i < user.Count; i++)
                 {
-
                     singlebatch.Add(user[i].DeviceToken);
-
                 }
-
                 if (singlebatch.Count > 0)
                 {
                     dynamic data = new
                     {
-                        //to = "f_A71_-KTWGmMb2uy6AQTm:APA91bGIS_vGLgaxzlRuSFetkspkuV-dZkHhhtfXrEiJC_47PCCWyVsCUcQHSNlG33Cz5cnIF1SDn4B-7s-I8pEvZHPY_tdELqjhRm_e8t-AcPL0EIQJamlBEroP9Dt4f5cuobN6FP7s", // Uncoment this if you want to test for single device
-                        //registration_ids = singlebatch,
                         registration_ids = singlebatch,
-                        // this is for multiple user // registration_ids = singlebatch, // this is for multiple user                                                                                                                                                                          // registration_ids = singlebatch, // this is for multiple user 
                         notification = new
                         {
-                            title = title,            // Notification title
-                            body = body,             // Notification body data
-                            link = "custome",       // When click on notification user redirect to this link
+                            title = title,                              // Notification title
+                            body = body,                               // Notification body data
+                            link = "custome",                         // When click on notification user redirect to this link
                             image = "/Images/Notifications/" + image,
                             sound = "bing"
                         },
@@ -621,33 +616,25 @@ namespace Turbo.Controllers
                         },
                         messageID = "ABCDEFIGHIJ"
                     };
-
                     var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
                     var json = serializer.Serialize(data);
                     Byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(json);
-
                     string SERVER_API_KEY = SERVERAPIKEY;
                     string SENDER_ID = SENDERID;
-
                     WebRequest tRequest;
                     tRequest = WebRequest.Create("https://fcm.googleapis.com/fcm/send");
                     tRequest.Method = "post";
                     tRequest.ContentType = "application/json";
                     tRequest.Headers.Add(string.Format("Authorization: key={0}", SERVER_API_KEY));
-
                     tRequest.Headers.Add(string.Format("Sender: id={0}", SENDER_ID));
-
                     tRequest.ContentLength = byteArray.Length;
                     Stream dataStream = tRequest.GetRequestStream();
                     dataStream.Write(byteArray, 0, byteArray.Length);
                     dataStream.Close();
                     WebResponse tResponse = tRequest.GetResponse();
                     dataStream = tResponse.GetResponseStream();
-
                     StreamReader tReader = new StreamReader(dataStream);
-
                     String sResponseFromServer = tReader.ReadToEnd();
-
                     tReader.Close();
                     dataStream.Close();
                     tResponse.Close();
@@ -658,7 +645,5 @@ namespace Turbo.Controllers
                 throw;
             }
         }
-
-
     }
 }
