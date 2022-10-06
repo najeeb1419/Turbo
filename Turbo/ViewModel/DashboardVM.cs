@@ -12,5 +12,6 @@ namespace Turbo.ViewModel
         public decimal Currencies { get; set; }
         public List<int> mountCount { get; set; }
         public List<int> dailyCount { get; set; }
+        public List<TradingSignalViewModel> tradeList { get; set; }
     }
 }

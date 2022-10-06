@@ -45,7 +45,9 @@ namespace Turbo.Models
         public bool IsBlocked { get; set; }
         public bool IsHide { get; set; }
         public string UserName { get; set; }
+        public string ApiToken { get; set; }
 
-       
+
+
     }
 }

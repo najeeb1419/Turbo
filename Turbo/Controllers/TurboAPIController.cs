@@ -167,7 +167,7 @@ namespace Turbo.Controllers
                                 SLobject.PIPS = StopLoseobj.PIPS;
                                 SLobject.SL = StopLoseobj.SL;
                                 SLobject.Disble = StopLoseobj.Disable;
-                                if (StopLoseobj.Disable == true)
+                                if (string.IsNullOrEmpty(tradingSignalViewModel.LatestHitTp) && StopLoseobj.Disable == true)
                                 {
                                     tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
                                 }
@@ -181,21 +181,18 @@ namespace Turbo.Controllers
                         }
                         trading.TradingSignalList = TradingList;
                         res.Message = "Ok";
-                        res.StatusCode = "200";
                         trading.Response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, trading);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "1000";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
@@ -203,7 +200,6 @@ namespace Turbo.Controllers
             {
                 trading.TradingSignalList = null;
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
                 trading.Response = res;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, trading);
             }
@@ -327,11 +323,11 @@ namespace Turbo.Controllers
                                 SLobject.TradingSignalId = StopLoseobj.TradingSignalId;
                                 SLobject.PIPS = StopLoseobj.PIPS;
                                 SLobject.SL = StopLoseobj.SL;
-                                if (StopLoseobj.Disable == true)
+                                if (string.IsNullOrEmpty(tradingSignalViewModel.LatestHitTp) && StopLoseobj.Disable == true)
                                 {
-                                    tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
-                                    double pips = Convert.ToDouble(StopLoseobj.PIPS);
-                                    tradingSignalViewModel.PIPS = Convert.ToInt64(pips);
+                                        tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
+                                        double pips = Convert.ToDouble(StopLoseobj.PIPS);
+                                        tradingSignalViewModel.PIPS = Convert.ToInt64(pips);
                                 }
                                 tradingSignalViewModel.StopLose = SLobject;
                             }
@@ -343,21 +339,18 @@ namespace Turbo.Controllers
                         }
                         trading.TradingSignalList = TradingList;
                         res.Message = "Ok";
-                        res.StatusCode = "200";
                         trading.Response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, trading);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
-                        res.StatusCode = "1000";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
-                    res.StatusCode = "1000";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
@@ -365,7 +358,6 @@ namespace Turbo.Controllers
             {
                 trading.TradingSignalList = null;
                 res.Message = ex.Message;
-                res.StatusCode = "1000";
                 trading.Response = res;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, trading);
             }
@@ -382,7 +374,6 @@ namespace Turbo.Controllers
                 {
                     if (user.deviceToken == "" || user.apiToken == "" || user.companyid == 0 || user.userId == 0)
                     {
-                        res.StatusCode = "1000";
                         if (user.deviceToken == "" || user.deviceToken == null)
                         {
                             res.Message = "deviceToken can't be null";
@@ -415,7 +406,6 @@ namespace Turbo.Controllers
                     var findcompany = db.RegisterComapany.Where(x => x.RegisterComapanyID == user.companyid && x.Enable == true).FirstOrDefault();
                     if (findcompany == null)
                     {
-                        res.StatusCode = "1000";
                         res.Message = "your company not registerd";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
@@ -435,16 +425,13 @@ namespace Turbo.Controllers
                         {
                             db.Users.Add(user1);
                             db.SaveChanges();
-                            res.StatusCode = "200";
                             res.Message = "User data added successfully";
                         }
-                        res.StatusCode = "200";
                         return Request.CreateResponse(HttpStatusCode.OK, res);
                     }
                 }
                 else
                 {
-                    res.StatusCode = "1000";
                     res.Message = "object is null";
                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                 }
@@ -452,7 +439,6 @@ namespace Turbo.Controllers
             }
             catch (Exception ex)
             {
-                res.StatusCode = "1000";
                 res.Message = ex.Message;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
@@ -496,7 +482,7 @@ namespace Turbo.Controllers
                                 var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
                                 var lastDayOfMonth = new DateTime(date.Year, date.Month, daysInMonth);
                                 query = query.Where(x => x.CreatedTime.Date >= firstDayOfMonth.Date && x.CreatedTime.Date <= lastDayOfMonth.Date).ToList();
-                            
+
                             }
                             else if (apiDTO.reportType.ToLower() == "weekly")
                             {
@@ -696,7 +682,7 @@ namespace Turbo.Controllers
                 res.Message = ex.Message;
                 return Request.CreateResponse(HttpStatusCode.ExpectationFailed, res);
             }
-            
+
         }
 
         [HttpPost]
@@ -860,7 +846,6 @@ namespace Turbo.Controllers
             }
             catch (Exception ex)
             {
-                res.StatusCode = "1000";
                 res.Message = ex.Message;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }

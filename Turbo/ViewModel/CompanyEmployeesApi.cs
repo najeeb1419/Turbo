@@ -18,26 +18,22 @@ namespace Turbo.ViewModel
         public string Email { get; set; }
         [Display(Name = "Password")]
         public string Password { get; set; }
-        public bool EmailConfirmed { get; set; }
         [Display(Name = "Employee Image")]
         public string Image { get; set; }
-        [Display(Name = "Designation")]
-        public string designation { get; set; }
-        public string Companyid { get; set; }
+        public int Companyid { get; set; }
         [Display(Name = "Employee Address")]
         public string Address { get; set; }
         [Display(Name = "Contact No")]
         public string Contact { get; set; }
-        public DateTime CreatedDate { get; set; }
-        [Display(Name = "Enable Employee")]
-        public bool Enable { get; set; }
-        public string code { get; set; }
-        public string Message { get; set; }
-        public string mobile_model { get; set; }
-        public string os_version { get; set; }
-        public string latitude { get; set; }
-        public string longitude { get; set; }
-        public string companyid { get; set; }
-        public string employeeid { get; set; }
+        public string DateOfBirth { get; set; }
+        public  string Designation { get; set; }
+        public int DesignationId { get; set; }
+        public bool IsBlocked { get; set; }
+        public bool IsHide { get; set; }
+        public string ApiToken { get; set; }
+        public string CreatedBy { get; set; }
+        public string ModyfiedBy { get; set; }
+        public UserDTO userDto { get; set; }
+
     }
 }

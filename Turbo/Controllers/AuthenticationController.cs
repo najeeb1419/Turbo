@@ -20,8 +20,8 @@ namespace Turbo.Controllers
         [HttpPost]
         public ActionResult Login(string Email, string Password)
         {
-            //try
-            //{
+            try
+            {
                 CompanyEmployee employee = new CompanyEmployee();
                 RegisterComapany company = new RegisterComapany();
                 employee = db.CompanyEmployees.Where(x => x.Enable == true && x.Email == Email && x.Password == Password).FirstOrDefault();
@@ -51,15 +51,14 @@ namespace Turbo.Controllers
                     TempData.Keep();
                     return RedirectToAction("Login");
                 }
-            //}
-            //catch (Exception ex)
-            //{
-            //    string msg = ex.Message;
-            //    TempData["mdg"] = msg;
-            //    TempData.Keep();
-            //    return RedirectToAction("Login");
-            //    throw;
-            //}
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                TempData["mdg"] = msg;
+                TempData.Keep();
+                return RedirectToAction("Login");
+            }
         }
 
         [HttpGet]
