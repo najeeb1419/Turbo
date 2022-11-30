@@ -16,6 +16,7 @@ using Turbo.Migrations;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace Turbo.Controllers
 {
@@ -54,7 +55,8 @@ namespace Turbo.Controllers
                             var daysInMonth = System.DateTime.DaysInMonth(date.Year, date.Month);
                             var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
                             var lastDayOfMonth = new DateTime(date.Year, date.Month, daysInMonth);
-                            IdeasList = IdeasList.Where(x => x.CreatedTime.Date >= firstDayOfMonth.Date && x.CreatedTime.Date <= lastDayOfMonth.Date).ToList();
+                            //IdeasList = IdeasList.Where(x => x.CreatedTime.Date >= firstDayOfMonth.Date && x.CreatedTime.Date <= lastDayOfMonth.Date).ToList();
+                            IdeasList = IdeasList.Where(x => x.ModifyTime.Month == lastDayOfMonth.Month).ToList();
                         }
                         else if (apiDTO.reportType.ToLower() == "weekly")
                         {
@@ -68,12 +70,24 @@ namespace Turbo.Controllers
                             int daysTillCurrentDay = currentDay - DayOfWeek.Monday;
                             DateTime currentWeekStartDate = date.AddDays(-daysTillCurrentDay);
                             DateTime CurrentWeekLastDate = currentWeekStartDate.AddDays(6);
-                            IdeasList = IdeasList.Where(x => x.CreatedTime.Date >= currentWeekStartDate.Date && x.CreatedTime.Date <= CurrentWeekLastDate.Date).ToList();
+                            IdeasList = IdeasList.Where(x => x.ModifyTime.Date >= currentWeekStartDate.Date && x.ModifyTime.Date <= CurrentWeekLastDate.Date).ToList();
                         }
 
                         if (apiDTO.employeeId > 0)
                         {
-                            IdeasList = IdeasList.Where(x => x.CreatedById == apiDTO.employeeId && x.Status != "0" && x.Status != "2").OrderBy(x => Convert.ToInt32(x.Status)).ToList();
+                            var list = IdeasList.Where(x => x.CreatedById == apiDTO.employeeId).OrderBy(x => Convert.ToInt32(x.Status)).ToList();
+                            if(list.Count>0)
+                            {
+                                var runingIdeas = list.Where(x => x.Status == "1").ToList();
+                                var wonAndLossIdeas = list.Where(x => x.Status == "5" || x.Status == "4").OrderByDescending(x => x.CreatedTime).ToList();
+                                var totalIdeas =  runingIdeas;
+                                if(wonAndLossIdeas.Count>0)
+                                {
+                                    totalIdeas.AddRange(wonAndLossIdeas);
+                                    IdeasList = totalIdeas;
+                                }
+                            }
+                            
                         }
                         else
                         {
@@ -122,7 +136,7 @@ namespace Turbo.Controllers
                             tradingSignalViewModel.Remarks = item.Remarks;
                             tradingSignalViewModel.CurrentPrice = item.CurrentPrice;
                             tradingSignalViewModel.PIPS = item.PIPS;
-                            tradingSignalViewModel.CreatedTime = item.CreatedTime.AddHours(1).ToString("dd/MM/yyyy HH:mm");
+                            tradingSignalViewModel.CreatedTime = item.CreatedTime.AddHours(5).ToString("dd/MM/yyyy HH:mm");
                             tradingSignalViewModel.Companyid = item.Companyid;
                             tradingSignalViewModel.CreatedBy = item.CompanyEmployee.fName + " " + item.CompanyEmployee.lName;
                             tradingSignalViewModel.CreatedId = item.CreatedById;
@@ -181,18 +195,21 @@ namespace Turbo.Controllers
                         }
                         trading.TradingSignalList = TradingList;
                         res.Message = "Ok";
+                        res.StatusCode = "200";
                         trading.Response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, trading);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
@@ -200,6 +217,7 @@ namespace Turbo.Controllers
             {
                 trading.TradingSignalList = null;
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 trading.Response = res;
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, trading);
             }
@@ -325,9 +343,9 @@ namespace Turbo.Controllers
                                 SLobject.SL = StopLoseobj.SL;
                                 if (string.IsNullOrEmpty(tradingSignalViewModel.LatestHitTp) && StopLoseobj.Disable == true)
                                 {
-                                        tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
-                                        double pips = Convert.ToDouble(StopLoseobj.PIPS);
-                                        tradingSignalViewModel.PIPS = Convert.ToInt64(pips);
+                                    tradingSignalViewModel.LatestHitTp = "SL Hit @ " + StopLoseobj.SL + " " + StopLoseobj.PIPS + " PIPS";
+                                    double pips = Convert.ToDouble(StopLoseobj.PIPS);
+                                    tradingSignalViewModel.PIPS = Convert.ToInt64(pips);
                                 }
                                 tradingSignalViewModel.StopLose = SLobject;
                             }
@@ -339,18 +357,21 @@ namespace Turbo.Controllers
                         }
                         trading.TradingSignalList = TradingList;
                         res.Message = "Ok";
+                        res.StatusCode = "200";
                         trading.Response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, trading);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
@@ -358,7 +379,9 @@ namespace Turbo.Controllers
             {
                 trading.TradingSignalList = null;
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 trading.Response = res;
+
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, trading);
             }
         }
@@ -377,18 +400,22 @@ namespace Turbo.Controllers
                         if (user.deviceToken == "" || user.deviceToken == null)
                         {
                             res.Message = "deviceToken can't be null";
+                            res.StatusCode = "1001";
                         }
                         else if (user.apiToken == "" || user.apiToken == null)
                         {
                             res.Message = "apiToken can't be null";
+                            res.StatusCode = "1001";
                         }
                         else if (user.companyid == 0)
                         {
                             res.Message = "companyid can't be null";
+                            res.StatusCode = "1001";
                         }
                         else if (user.userId == 0)
                         {
                             res.Message = "userId can't be null";
+                            res.StatusCode = "1001";
                         }
                         return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
 
@@ -407,6 +434,7 @@ namespace Turbo.Controllers
                     if (findcompany == null)
                     {
                         res.Message = "your company not registerd";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                     else
@@ -420,12 +448,15 @@ namespace Turbo.Controllers
                             db.Entry(finduser).State = EntityState.Modified;
                             db.SaveChanges();
                             res.Message = "User data updated successfully";
+                            res.StatusCode = "200";
                         }
                         else
                         {
                             db.Users.Add(user1);
                             db.SaveChanges();
                             res.Message = "User data added successfully";
+                            res.StatusCode = "200";
+
                         }
                         return Request.CreateResponse(HttpStatusCode.OK, res);
                     }
@@ -433,6 +464,7 @@ namespace Turbo.Controllers
                 else
                 {
                     res.Message = "object is null";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                 }
 
@@ -440,6 +472,7 @@ namespace Turbo.Controllers
             catch (Exception ex)
             {
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
         }
@@ -473,15 +506,18 @@ namespace Turbo.Controllers
                             var query = db.EmployeePIPs.Include(x => x.CompanyEmployee).Where(x => x.CompanyId == apiDTO.companyId.ToString() && x.CompanyEmployeeID == item1.CompanyEmployeeID).ToList();
                             if (apiDTO.reportType.ToLower() == "monthly")
                             {
+
                                 if (apiDTO.date != "" && apiDTO.date != null)
                                 {
                                     date = DateTime.ParseExact(apiDTO.date, "dd/MM/yyyy", null);
                                 }
                                 // get first and last date of month.
-                                var daysInMonth = System.DateTime.DaysInMonth(date.Year, date.Month);
-                                var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
-                                var lastDayOfMonth = new DateTime(date.Year, date.Month, daysInMonth);
-                                query = query.Where(x => x.CreatedTime.Date >= firstDayOfMonth.Date && x.CreatedTime.Date <= lastDayOfMonth.Date).ToList();
+                                //var daysInMonth = System.DateTime.DaysInMonth(date.Year, date.Month);
+                                //var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+                                //var lastDayOfMonth = new DateTime(date.Year, date.Month, daysInMonth);
+                                //query = query.Where(x => x.CreatedTime.Date >= firstDayOfMonth.Date && x.CreatedTime.Date <= lastDayOfMonth.Date).ToList();
+                                query = query.Where(x => DateTime.ParseExact(x.CreatedTime.Date.ToString("dd/MM/yyyy"), "dd/MM/yyyy", null).Month == date.Month).ToList();
+
 
                             }
                             else if (apiDTO.reportType.ToLower() == "weekly")
@@ -548,6 +584,7 @@ namespace Turbo.Controllers
                             }
                         }
                         res.Message = "Ok";
+                        res.StatusCode = "200";
                         tradingReportObjectViewModel.response = res;
                         tradingReportObjectViewModel.tradingReportList = TradList;
                         reportList.tradingReport = tradingReportObjectViewModel;
@@ -556,18 +593,21 @@ namespace Turbo.Controllers
                     else
                     {
                         res.Message = "Your are not authorized.";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registerd.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
 
@@ -662,24 +702,28 @@ namespace Turbo.Controllers
                         }
                         notificationAPi.notificationList = notificationVMlist;
                         res.Message = "Ok";
+                        res.StatusCode = "200";
                         notificationAPi.response = res;
                         return Request.CreateResponse(HttpStatusCode.OK, notificationAPi);
                     }
                     else
                     {
                         res.Message = "You are not authorized user.";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 return Request.CreateResponse(HttpStatusCode.ExpectationFailed, res);
             }
 
@@ -743,18 +787,21 @@ namespace Turbo.Controllers
                     else
                     {
                         res.Message = "You are not authorized user.";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
+                res.StatusCode = "403";
             }
             return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
         }
@@ -776,21 +823,25 @@ namespace Turbo.Controllers
                                 if (notif.companyId == 0)
                                 {
                                     res.Message = "CompanyId can't be null";
+                                    res.StatusCode = "1001";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                                 else if (notif.employeeId == 0)
                                 {
                                     res.Message = "employeeId can't be null";
+                                    res.StatusCode = "1001";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                                 else if (notif.apiToken == "" || notif.apiToken == null)
                                 {
                                     res.Message = "apiToken can't be null";
+                                    res.StatusCode = "1001";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                                 else if (notif.userId == 0)
                                 {
                                     res.Message = "userId can't be null";
+                                    res.StatusCode = "1001";
                                     return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                                 }
                             }
@@ -803,9 +854,11 @@ namespace Turbo.Controllers
                                     db.AllowNotifications.Remove(finduser);
                                     db.SaveChanges();
                                     res.Message = "Notificatons allow successfully";
+                                    res.StatusCode = "200";
                                     return Request.CreateResponse(HttpStatusCode.OK, res);
                                 }
                                 res.Message = "";
+                                res.StatusCode = "200";
                                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                             }
                             else
@@ -820,33 +873,39 @@ namespace Turbo.Controllers
                                     db.AllowNotifications.Add(notification);
                                     db.SaveChanges();
                                     res.Message = "Notifications off successfully";
+                                    res.StatusCode = "200";
                                     return Request.CreateResponse(HttpStatusCode.OK, res);
                                 }
                                 res.Message = "Notifications already off";
+                                res.StatusCode = "200";
                                 return Request.CreateResponse(HttpStatusCode.OK, res);
                             }
                         }
                         else
                         {
                             res.Message = "Your company not registerd";
+                            res.StatusCode = "1001";
                             return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                         }
                     }
                     else
                     {
                         res.Message = "object is null";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
                     }
                 }
                 else
                 {
                     res.Message = "You are not authorized user.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
             }
         }
@@ -865,7 +924,7 @@ namespace Turbo.Controllers
                 {
                     if (CheckApiToken(apiDTO.companyId, apiDTO.apiToken))
                     {
-                        var trade = db.TradingSignals.Include(x => x.CompanyEmployee).Where(x => x.Status == "4" || x.Status == "5" && x.CompanyEmployee.IsHide == false).ToList();
+                        var trade = db.TradingSignals.Include(x => x.CompanyEmployee).Where(x => x.Status == "4" || x.Status == "5" && x.CompanyEmployee.IsHide == false).OrderByDescending(x => x.ModifyTime).ToList();
                         foreach (var item in trade)
                         {
                             PastResultViewModel past = new PastResultViewModel();
@@ -914,27 +973,30 @@ namespace Turbo.Controllers
                     else
                     {
                         res.Message = "You are not authorized user.";
+                        res.StatusCode = "1001";
                         return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                     }
                 }
                 else
                 {
                     res.Message = "Your company not registered.";
+                    res.StatusCode = "1001";
                     return Request.CreateResponse(HttpStatusCode.Unauthorized, res);
                 }
             }
             catch (Exception ex)
             {
                 res.Message = ex.Message;
+                res.StatusCode = "403";
                 return Request.CreateResponse(HttpStatusCode.ExpectationFailed, res);
             }
-            return Request.CreateResponse(HttpStatusCode.NotImplemented, res);
         }
 
         public PIPSCalculation CalculatePIPS(List<EmployeePIPS> input)
         {
             PIPSCalculation pipsCalculation = new PIPSCalculation();
-            pipsCalculation.PIPSWonCount = input.Where(x => x.Status.ToLower() == "won").Count();
+            var total = input.Where(x => x.Status.ToLower() == "won").Count();
+            pipsCalculation.PIPSWonCount = total;
             pipsCalculation.PIPSLossCount = input.Where(x => x.Status.ToLower() == "loss").Count();
             pipsCalculation.PIPSWonSum = input.Where(x => x.Status.ToLower() == "won").Sum(x => x.PIPS);
             pipsCalculation.PIPSLossSum = input.Where(x => x.Status.ToLower() == "loss").Sum(x => x.PIPS);

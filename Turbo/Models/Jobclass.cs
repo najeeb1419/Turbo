@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Owin.Security.Provider;
+using Newtonsoft.Json;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -32,122 +33,131 @@ namespace Turbo.Models
         }
         public bool BackgroundService()
         {
-            var tradeideas = db.TradingSignals.Include(x => x.CompanyEmployee).Where(x => x.Status == "1" && x.CompanyEmployee.IsHide == false).ToList();
-            foreach (var trad in tradeideas)
+            try
             {
-                string currenyPair = trad.CurrencyList.CurrencyName.Replace(@"/", string.Empty);
-                string Baseurl = "https://api.finage.co.uk/last/forex/";
-                decimal currentRate = 0;
-                string body = "";
-                string currencyname = trad.CurrencyList.CurrencyName;
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-                currencyname = currencyname.Substring(currencyname.Length - 3);
-                using (var client = new HttpClient())
+                var tradeideas = db.TradingSignals.Include(x => x.CompanyEmployee).Where(x => x.Status == "1" && x.CompanyEmployee.IsHide == false).ToList();
+                foreach (var trad in tradeideas)
                 {
-                    client.BaseAddress = new Uri(Baseurl);
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var Res = client.GetAsync(currenyPair + "?apikey=" + CurrencyApiKey);
-                    Res.Wait();
-                    var result = Res.Result;
-                    if (result.IsSuccessStatusCode)
+                    string currenyPair = trad.CurrencyList.CurrencyName.Replace(@"/", string.Empty);
+                    string Baseurl = "https://api.finage.co.uk/last/forex/";
+                    decimal currentRate = 0;
+                    string body = "";
+                    string currencyname = trad.CurrencyList.CurrencyName;
+                    JavaScriptSerializer jss = new JavaScriptSerializer();
+                    currencyname = currencyname.Substring(currencyname.Length - 3);
+                    using (var client = new HttpClient())
                     {
-                        var EmpResponse = result.Content.ReadAsStringAsync().Result;
-                        var obj = JsonConvert.DeserializeObject(EmpResponse);
-                        currencyJson user = jss.Deserialize<currencyJson>(obj.ToString());
-                        int i = 0;
-                        decimal countPIPS = 0;
-                        if (currencyname == "JPY")
+                        client.BaseAddress = new Uri(Baseurl);
+                        client.DefaultRequestHeaders.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        var Res = client.GetAsync(currenyPair + "?apikey=" + CurrencyApiKey);
+                        Res.Wait();
+                        var result = Res.Result;
+                        if (result.IsSuccessStatusCode)
                         {
-                            currentRate = Convert.ToDecimal(Convert.ToDecimal(user.ask).ToString("F2"));
-                            countPIPS = (Convert.ToDecimal(trad.Buy) - Convert.ToDecimal(currentRate)) * 100;
-                        }
-                        else
-                        {
-                            currentRate = Convert.ToDecimal(Convert.ToDecimal(user.ask).ToString("F4"));
-                            countPIPS = (Convert.ToDecimal(trad.Buy) - Convert.ToDecimal(currentRate)) * 10000;
-                        }
-                        if (trad.Type == "1" || trad.Type == "3" || trad.Type == "6")
-                        {
-                            countPIPS = Convert.ToDecimal(trad.Buy) > Convert.ToDecimal(currentRate) ? System.Math.Abs(countPIPS) * (-1) : System.Math.Abs(countPIPS);
-                        }
-                        else if (trad.Type == "2" || trad.Type == "4" || trad.Type == "5")
-                        {
-                            countPIPS = Convert.ToDecimal(currentRate) > Convert.ToDecimal(trad.Buy) ? System.Math.Abs(countPIPS) * (-1) : System.Math.Abs(countPIPS);
-                        }
-                        var takeProfit = db.TakeProfits.Where(x => x.Disable == false && x.TradingSignalId == trad.TradingSignalId && x.Companyid == trad.Companyid).ToList();
-                        foreach (var tpItem in takeProfit)
-                        {
-                            i = i + 1;
-                            if (countPIPS >= Convert.ToDecimal(tpItem.PIPS))
+                            var EmpResponse = result.Content.ReadAsStringAsync().Result;
+                            var obj = JsonConvert.DeserializeObject(EmpResponse);
+                            currencyJson user = jss.Deserialize<currencyJson>(obj.ToString());
+                            int i = 0;
+                            decimal countPIPS = 0;
+                            if (currencyname == "JPY")
                             {
-                                //Take Profit 3 Achieved +100 PIPS - EUR/JPY
-                                body = "Take Profit " + tpItem.No + " Achieved +" + tpItem.PIPS + " PIPS - " + trad.CurrencyList.CurrencyName;
-                                // disable is true because this will not show in pass result , these records will only show in past result when the idea is completely won or loss
-                                double pipsResult = Convert.ToDouble(tpItem.PIPS);
-                                // change tP status
-                                tpItem.Disable = true;
-                                tpItem.ModifyTime = DateTime.Now;
-                                db.Entry(tpItem).State = EntityState.Modified;
-                                db.SaveChanges();
-                                SaveNotification(trad, body ,"5");
-                                SendNotification(Convert.ToInt32(trad.CreatedById), body, trad.TradingSignalId);
+                                currentRate = Convert.ToDecimal(Convert.ToDecimal(user.ask).ToString("F2"));
+                                countPIPS = (Convert.ToDecimal(trad.Buy) - Convert.ToDecimal(currentRate)) * 100;
                             }
-                        }
-                        // when all tp are hitted then end the trade idea
-                        var findTakePrfit = db.TakeProfits.Where(x => x.Disable == false && x.TradingSignalId == trad.TradingSignalId && x.Companyid == trad.Companyid).ToList();
-                        if (findTakePrfit.Count() == 0)
-                        {
-                            var tpend = db.TakeProfits.Where(x => x.TradingSignalId == trad.TradingSignalId).OrderByDescending(x => x.PIPS).FirstOrDefault();
-                            double pipsResult = Convert.ToDouble(tpend.PIPS);
-                            SaveEmployeePIPS(trad, "won", Convert.ToInt32(pipsResult));
-                            body = "Trade Ended & Idea Won - " + trad.CurrencyList.CurrencyName;
-                            trad.Disable = true;
-                            trad.Status = "5";
-                            db.Entry(trad).State = EntityState.Modified;
-                            db.SaveChanges();
-                            SaveNotification(trad, body , trad.Status);
-                            SendNotification(Convert.ToInt32(trad.CreatedById), body, trad.TradingSignalId);
-                            break;
-                        }
-                        var loss = db.StopLoses.Where(x => x.Disable == false && x.TradingSignalId == trad.TradingSignalId).FirstOrDefault();
-                        if (loss != null)
-                        {
-                            double pipsResult = Convert.ToDouble(loss.PIPS);
-                            if (countPIPS <= Convert.ToDecimal(pipsResult))
+                            else
                             {
-                                //SL HIT unfortunately - 30 PIPS - EUR / JPY
-                                loss.Disable = true;
-                                loss.ModifyTime = DateTime.Now;
-                                db.Entry(loss).State = EntityState.Modified;
-                                db.SaveChanges();
-                                // trade idea end 
+                                currentRate = Convert.ToDecimal(Convert.ToDecimal(user.ask).ToString("F4"));
+                                countPIPS = (Convert.ToDecimal(trad.Buy) - Convert.ToDecimal(currentRate)) * 10000;
+                            }
+                            if (trad.Type == "1" || trad.Type == "3" || trad.Type == "6")
+                            {
+                                countPIPS = Convert.ToDecimal(trad.Buy) > Convert.ToDecimal(currentRate) ? System.Math.Abs(countPIPS) * (-1) : System.Math.Abs(countPIPS);
+                            }
+                            else if (trad.Type == "2" || trad.Type == "4" || trad.Type == "5")
+                            {
+                                countPIPS = Convert.ToDecimal(currentRate) > Convert.ToDecimal(trad.Buy) ? System.Math.Abs(countPIPS) * (-1) : System.Math.Abs(countPIPS);
+                            }
+                            var takeProfit = db.TakeProfits.Where(x => x.Disable == false && x.TradingSignalId == trad.TradingSignalId && x.Companyid == trad.Companyid).ToList();
+                            foreach (var tpItem in takeProfit)
+                            {
+                                i = i + 1;
+                                if (countPIPS >= Convert.ToDecimal(tpItem.PIPS))
+                                {
+                                    //Take Profit 3 Achieved +100 PIPS - EUR/JPY
+                                    body = "Take Profit " + tpItem.No + " Achieved +" + tpItem.PIPS + " PIPS - " + trad.CurrencyList.CurrencyName;
+                                    // disable is true because this will not show in pass result , these records will only show in past result when the idea is completely won or loss
+                                    double pipsResult = Convert.ToDouble(tpItem.PIPS);
+                                    // change tP status
+                                    tpItem.Disable = true;
+                                    tpItem.ModifyTime = DateTime.Now;
+                                    db.Entry(tpItem).State = EntityState.Modified;
+                                    db.SaveChanges();
+                                    SaveNotification(trad, body, "5");
+                                    SendNotification(Convert.ToInt32(trad.CreatedById), body, trad.TradingSignalId);
+                                }
+                            }
+                            // when all tp are hitted then end the trade idea
+                            var findTakePrfit = db.TakeProfits.Where(x => x.Disable == false && x.TradingSignalId == trad.TradingSignalId && x.Companyid == trad.Companyid).ToList();
+                            if (findTakePrfit.Count() == 0)
+                            {
+                                var tpend = db.TakeProfits.Where(x => x.TradingSignalId == trad.TradingSignalId).OrderByDescending(x => x.PIPS).FirstOrDefault();
+                                double pipsResult = Convert.ToDouble(tpend.PIPS);
+                                SaveEmployeePIPS(trad, "won", Convert.ToInt32(pipsResult));
+                                body = "Trade Ended & Idea Won - " + trad.CurrencyList.CurrencyName;
                                 trad.Disable = true;
-                                // if take profit is null or count =0 then idea shuld be loss else idea shuld be won
-                                var takeprofit = db.TakeProfits.Where(x => x.Disable == true && x.TradingSignalId == trad.TradingSignalId && x.Companyid == trad.Companyid).ToList();
-                                if (takeprofit.Count > 0)
-                                {
-                                    trad.Status = "5";
-                                    body = "Trade Ended & Idea Won - " + trad.CurrencyList.CurrencyName;
-                                    var tpHit = takeProfit.OrderByDescending(x => x.PIPS).FirstOrDefault();
-                                    SaveEmployeePIPS(trad, "won", Convert.ToInt32(tpHit.PIPS));
-                                }
-                                else
-                                {
-                                    trad.Status = "4";
-                                    body = "SL HIT unfortunately " + pipsResult + " PIPS - " + trad.CurrencyList.CurrencyName;
-                                    SaveEmployeePIPS(trad, "loss", Convert.ToInt32(pipsResult));
-                                }
+                                trad.Status = "5";
                                 db.Entry(trad).State = EntityState.Modified;
                                 db.SaveChanges();
-                                SaveNotification(trad, body , trad.Status);
+                                SaveNotification(trad, body, trad.Status);
                                 SendNotification(Convert.ToInt32(trad.CreatedById), body, trad.TradingSignalId);
+                                break;
+                            }
+                            var loss = db.StopLoses.Where(x => x.Disable == false && x.TradingSignalId == trad.TradingSignalId).FirstOrDefault();
+                            if (loss != null)
+                            {
+                                double pipsResult = Convert.ToDouble(loss.PIPS);
+                                if (countPIPS <= Convert.ToDecimal(pipsResult))
+                                {
+                                    //SL HIT unfortunately - 30 PIPS - EUR / JPY
+                                    loss.Disable = true;
+                                    loss.ModifyTime = DateTime.Now;
+                                    db.Entry(loss).State = EntityState.Modified;
+                                    db.SaveChanges();
+                                    // trade idea end 
+                                    trad.Disable = true;
+                                    // if take profit is null or count =0 then idea shuld be loss else idea shuld be won
+                                    var takeprofit = db.TakeProfits.Where(x => x.Disable == true && x.TradingSignalId == trad.TradingSignalId && x.Companyid == trad.Companyid).OrderByDescending(x => x.PIPS).ToList();
+                                    if (takeprofit.Count > 0)
+                                    {
+                                        trad.Status = "5";
+                                        body = "Trade Ended & Idea Won - " + trad.CurrencyList.CurrencyName;
+                                        var tpHit = takeprofit.FirstOrDefault();
+                                        SaveEmployeePIPS(trad, "won", Convert.ToInt32(tpHit.PIPS));
+                                    }
+                                    else
+                                    {
+                                        trad.Status = "4";
+                                        body = "SL HIT unfortunately " + pipsResult + " PIPS - " + trad.CurrencyList.CurrencyName;
+                                        SaveEmployeePIPS(trad, "loss", Convert.ToInt32(pipsResult));
+                                    }
+                                    db.Entry(trad).State = EntityState.Modified;
+                                    db.SaveChanges();
+                                    SaveNotification(trad, body, trad.Status);
+                                    SendNotification(Convert.ToInt32(trad.CreatedById), body, trad.TradingSignalId);
+                                }
                             }
                         }
                     }
                 }
+                return true;
             }
-            return true;
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+                return true;
+            }
+
         }
 
         public async void SendNotification(int employeeId, string body, int tradeId)
@@ -228,14 +238,14 @@ namespace Turbo.Models
                     tResponse.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                var msg = ex.Message;
             }
         }
 
 
-        public async void SaveNotification(TradingSignals trad, string body , string status)
+        public async void SaveNotification(TradingSignals trad, string body, string status)
         {
             Notification notification = new Notification();
             notification.RegisterComapanyID = Convert.ToInt32(trad.Companyid);

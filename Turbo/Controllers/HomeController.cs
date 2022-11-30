@@ -91,7 +91,7 @@ namespace Turbo.Controllers
                     CreatedById = employee1.CompanyEmployeeID;
                     if (employee1.Designation.Name == "Admin" || privileges.isManager == true)
                     {
-                        var tradingSignals = db.TradingSignals.Include("CompanyEmployee").Where(x => x.Companyid == companyid.ToString()).Take(30).ToList();
+                        var tradingSignals = db.TradingSignals.Include("CompanyEmployee").Where(x => x.Companyid == companyid.ToString()).ToList();
                         CountTradingIdeas = tradingSignals.Count();
                         dashbaord.TradingIdeas = tradingSignals.Count();
                         ViewBag.TradingSignal = tradingSignals.Take(10).ToList();
@@ -115,7 +115,7 @@ namespace Turbo.Controllers
                         {
                             DateTime Day = new DateTime(currenctdate.Year, currenctdate.Month, j);
                             CountTradingIdeas = 0;
-                            CountTradingIdeas = tradingSignals.Where(x => x.CreatedTime.Date == Day.Date).Count();
+                            CountTradingIdeas = tradingSignals.Where(x => x.CreatedTime.Month == Day.Month).Count();
                             dailyCount.Add(CountTradingIdeas);
                             //ViewBag.daily = dailyCount;
                             dashbaord.dailyCount = dailyCount;
